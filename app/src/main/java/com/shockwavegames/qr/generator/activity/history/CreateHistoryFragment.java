@@ -1,0 +1,226 @@
+package com.shockwavegames.qr.generator.activity.history;
+
+import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.google.gson.JsonObject;
+import com.shockwavegames.qr.generator.activity.AdapterData;
+import com.shockwavegames.qr.generator.activity.CustomAdapter;
+import com.shockwavegames.qr.generator.activity.HistoryCustomAdapter;
+import com.shockwavegames.qr.generator.activity.HistoryType;
+import com.shockwavegames.qr.generator.activity.MainActivity;
+import com.shockwavegames.qr.generator.activity.QRData;
+import com.shockwavegames.qr.generator.activity.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class CreateHistoryFragment extends Fragment {
+
+    View view;
+    MainActivity mainActivity;
+    HistoryCustomAdapter listViewAdapter;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        view=inflater.inflate(R.layout.fragment_create_history, container, false);
+        mainActivity=((MainActivity)getActivity());
+        // Inflate the layout for this fragment
+        PoplulateList();
+        UpdateList();
+        return view;
+    }
+
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        UpdateList();
+    }
+    public  void UpdateList(){
+        if (mainActivity.creationQueueToAdd.size()>0) {
+
+            int size=mainActivity.creationQueueToAdd.size();
+            AdapterData temp;
+            for(int i=size-1;i>=0;i--){
+                temp=mainActivity.creationQueueToAdd.get(i);
+                listViewAdapter.getData().add(0,temp);
+            }
+
+//            listViewAdapter.getData().addAll(0,mainActivity.creationQueueToAdd);
+            listViewAdapter.notifyDataSetChanged();
+            mainActivity.creationQueueToAdd.clear();
+        }
+    }
+    void PoplulateList(){
+
+        ListView listView=view.findViewById(R.id.listScans);
+
+        List<QRData> qrData=mainActivity.dbData;
+        int size=qrData.size();
+
+        List<QRData> onlyCreateHistory=new ArrayList<>();
+        QRData temp;
+        for(int i=0;i<size;i++){
+            temp=qrData.get(i);
+            if(temp.historyType.equals(HistoryType.createHistory.toString())){
+                onlyCreateHistory.add(temp);
+            }
+        }
+
+        int tempArrSize=onlyCreateHistory.size();
+        List<AdapterData> adapterData=new ArrayList<>();
+        for(int i=0;i<tempArrSize;i++){
+            temp=onlyCreateHistory.get(i);
+            adapterData.add(new AdapterData(temp.qrType,temp.content,temp.creationTime,R.drawable.rainbow));
+//icon function here
+//            switch (temp.qrType){
+//                case "Text":
+//                    iconArr[i]=R.drawable.rainbow;
+//                    break;
+//                default:
+//                    iconArr[i]=R.drawable.rainbow;
+//                    break;
+//            }
+        }
+
+        listViewAdapter=new HistoryCustomAdapter(getContext(),adapterData);
+        listView.setAdapter(listViewAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String qrContent = "";//link here
+                String qrType=listViewAdapter.getData().get(position).qrType;
+
+                JSONObject otherData=new JSONObject();
+                switch (qrType){
+                    case "Product":
+                    case "ISBN":
+                    case "EAN13":
+                    case "EAN8":
+                    case "ITF":
+                    case "PDF 417":
+                    case "UPC E":
+                    case "UPC A":
+
+                        qrContent=listViewAdapter.getData().get(position).content;
+                        mainActivity.ChangeFragment("resultFragment2D",new String[]{qrContent,qrType,otherData.toString()});
+                        break;
+                    default://on empty fields i'll put a * instead
+                        String[] temp=listViewAdapter.getData().get(position).content.split("\n~!");
+                        switch (qrType){
+                            case "Contact":
+                            case "Website":
+                            case "Text":
+                            case "Clipboard":
+                            case "Apps":
+                                qrContent=listViewAdapter.getData().get(position).content;
+                                break;
+                            case "Event":
+                                try {
+                                    otherData.put("Title", temp[0]);
+                                    otherData.put("Description", temp[1]);
+                                    otherData.put("Start Date", temp[2]);
+                                    otherData.put("End Date", temp[3]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                qrContent = String.format("BEGIN:VEVENT\n" +
+                                        "SUMMARY:%s\n" +
+                                        "DESCRIPTION:%s\n" +
+                                        "DTSTART::%s\n" +
+                                        "DTEND:%s\n" +
+                                        "END:VEVENT", temp[0], temp[1], temp[2], temp[3]
+                                );
+                                break;
+                            case "Geolocation":
+                                qrContent=String.format("geo:%s,%s",temp[0],temp[1]);
+                                try {
+                                    otherData.put("Latitude",temp[0]);
+                                    otherData.put("Longitude",temp[1]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case "Email":
+                                qrContent = String.format("MATMSG:TO:%s;SUB:%s;BODY:%s;;", temp[0],temp[1],temp[2]);
+                                try {
+                                    otherData.put("Email",temp[0]);
+                                    otherData.put("Subject",temp[1]);
+                                    otherData.put("Body",temp[2]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case "vCard":
+                                qrContent=String.format("BEGIN:VCARD\n" +
+                                        "VERSION:3.0\n" +
+                                        "N:%s;%s;;;\n" +
+                                        "FN:%s %s\n" +
+                                        "ORG:%s\n" +
+                                        "TITLE:%s\n" +
+                                        "AD:;;%s;%s;;;%s\n" +//Street,city,state,zipcode,country
+                                        "TEL;CELL:%s\n" +
+                                        "EMAIL;WORK;INTERNET:%s\n" +
+                                        "URL:%s\n" +
+                                        "END:VCARD", temp[1], temp[0], temp[0], temp[1], temp[2], temp[3], temp[4],temp[5],temp[6], temp[7], temp[8], temp[9]
+                                );
+                                try {
+                                    otherData.put("Name",temp[0].concat(" ").concat(temp[1]));
+                                    otherData.put("Company",temp[2]);
+                                    otherData.put("Title",temp[3]);
+                                    otherData.put("Address",temp[4].concat(",").concat(temp[5]).concat(",").concat(temp[6]));
+                                    otherData.put("Telephone",temp[7]);
+                                    otherData.put("Email",temp[8]);
+                                    otherData.put("URL",temp[9]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case "SMS":
+                                qrContent=String.format("smsto:%s:%s",temp[0],temp[1]);
+
+                                try {
+                                    otherData.put("Recipient",temp[0]);
+                                    otherData.put("Content",temp[1]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case "WiFi":
+                                qrContent=String.format("WIFI:S:%s;T:%s;P:%s;;",temp[0],temp[1],temp[2]);
+
+                                try {
+                                    otherData.put("SSID",temp[0]);
+                                    otherData.put("Password",temp[1]);
+                                    otherData.put("Security Type",temp[2]);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+
+                        }
+                        mainActivity.ChangeFragment("resultFragment",new String[]{qrContent,qrType,otherData.toString()});
+                        break;
+                }
+
+
+
+            }
+        });
+    }
+}

@@ -1,0 +1,53 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="#00FFFFFF"
+    android:layout_gravity="bottom"
+    android:layout_height="match_parent"
+>
+
+
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        app:contentInsetLeft="0dp"
+        app:fabCradleRoundedCornerRadius="2dp"
+        app:fabCradleMargin="7dp"
+        app:fabCradleVerticalOffset="0mm"
+        app:fabAnimationMode="scale"
+        app:fabAlignmentMode="center"
+        app:contentInsetStart="0dp"
+        >
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:itemIconSize="30dp"
+            android:layout_marginTop="10dp"
+            app:itemIconTint="@color/bar_selector"
+            app:itemPaddingTop="5dp"
+            app:menu="@menu/bottom_bar"
+            android:id="@+id/bottomNavigationView"
+            app:labelVisibilityMode="labeled"
+            />
+    </com.google.android.material.bottomappbar.BottomAppBar>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:fabCustomSize="70dp"
+
+        android:id="@+id/scanBtn"
+
+        android:scaleType="center"
+
+        android:backgroundTint="#5782E5"
+        app:backgroundTint="#FFFFFF"
+        android:src="@drawable/scan_btn"
+        app:borderWidth="2dp"
+        app:layout_anchor="@id/bottomAppBar"
+        tools:ignore="SpeakableTextPresentCheck" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

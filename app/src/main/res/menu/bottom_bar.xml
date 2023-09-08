@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/create"
+        android:icon="@drawable/qrcode_plus"
+
+        />
+    <item
+        android:id="@+id/information"
+        android:icon="@drawable/information_outline"
+    />
+    <item
+        android:id="@+id/placeholder"
+        android:title=""
+        android:enabled="false"
+    />
+        />
+    <item
+        android:id="@+id/history"
+        android:icon="@drawable/history"
+ />
+    <item
+        android:id="@+id/setting"
+        android:icon="@drawable/cog"
+ />
+</menu>
